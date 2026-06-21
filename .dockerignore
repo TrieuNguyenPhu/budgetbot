@@ -1,0 +1,11 @@
+.git
+.github
+.venv
+_data
+doc
+evidence
+terraform
+tests
+**/__pycache__
+*.pyc
+.env

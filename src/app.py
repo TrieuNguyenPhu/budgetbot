@@ -2,16 +2,28 @@
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import config
 from src.adapters import factory
 from src import handlers
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 
 app = FastAPI(title="BudgetBot — W7 Capstone Starter")
+
+REQUESTS = Counter(
+    "budgetbot_http_requests_total",
+    "HTTP requests handled by BudgetBot.",
+    ("method", "path", "status"),
+)
+LATENCY = Histogram(
+    "budgetbot_http_request_duration_seconds",
+    "BudgetBot HTTP request latency.",
+    ("method", "path"),
+)
 
 
 # CORS — allow frontend to live on a different origin (CloudFront / Amplify / separate ALB).
@@ -30,6 +42,15 @@ storage = factory.make_storage()
 userstore = factory.make_userstore()
 
 
+@app.middleware("http")
+async def observe_requests(request: Request, call_next):
+    path = request.url.path
+    with LATENCY.labels(request.method, path).time():
+        response = await call_next(request)
+    REQUESTS.labels(request.method, path, str(response.status_code)).inc()
+    return response
+
+
 def _resolve_user_id(x_user_id: Optional[str]) -> str:
     return x_user_id or config.default_user_id
 
@@ -44,6 +65,16 @@ def health() -> dict:
             "userstore": config.userstore_backend,
         },
     }
+
+
+@app.get("/ready")
+def ready() -> dict:
+    return {"status": "ready"}
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics() -> Response:
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.post("/upload")

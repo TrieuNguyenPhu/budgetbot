@@ -34,6 +34,13 @@ def test_health():
     assert r.json()["backends"]["ai"] == "local"
 
 
+def test_readiness_and_metrics():
+    assert client.get("/ready").json() == {"status": "ready"}
+    metrics = client.get("/metrics")
+    assert metrics.status_code == 200
+    assert "budgetbot_http_requests_total" in metrics.text
+
+
 def test_upload_csv_categorizes():
     r = client.post(
         "/upload",
