@@ -1,0 +1,13 @@
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata: {name: budgetbot-signed-images}
+spec:
+  images:
+    - glob: "ghcr.io/trieunguyenphu/**"
+  authorities:
+    - key:
+        data: |
+          -----BEGIN PUBLIC KEY-----
+          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEujcKkvIEF+N0+HxgS2/7yNtpEDVq
+          fNbUCswcoUTyYt+OT0OlgN9oyXsTKPF6eXUpkJLPKoYKt/ct5vC1X7uPrw==
+          -----END PUBLIC KEY-----
