@@ -1,17 +1,43 @@
+# Python / tests
 .venv/
 __pycache__/
 *.pyc
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 .env
+.env.*
+!.env.example
 _data/
 .pytest_cache/
 *.egg-info/
+
+# Editors / OS / local logs
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# Local lab handouts (requirements source, not application source)
+doc/*.html
 
 # Terraform
 terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.backup
-terraform/.terraform.lock.hcl
 terraform/*.pem
 terraform/terraform.tfvars
 terraform/*.tfstate.lock.info
+terraform/*.tfplan
+terraform/crash.log
+terraform/crash.*.log
+terraform/*_override.tf
+terraform/*_override.tf.json
+
+# Local credentials and generated signing material
+*.kubeconfig
+signing/cosign.key
 
