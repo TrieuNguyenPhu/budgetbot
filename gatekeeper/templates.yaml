@@ -1,0 +1,83 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata: {name: k8sbannedlatest}
+spec:
+  crd:
+    spec: {names: {kind: K8sBannedLatest}}
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sbannedlatest
+        violation[{"msg": msg}] {
+          c := input.review.object.spec.containers[_]
+          endswith(c.image, ":latest")
+          msg := sprintf("image %v uses the forbidden latest tag", [c.image])
+        }
+---
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata: {name: k8srequiredlimits}
+spec:
+  crd:
+    spec: {names: {kind: K8sRequiredLimits}}
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlimits
+        violation[{"msg": msg}] {
+          c := input.review.object.spec.containers[_]
+          not c.resources.limits.cpu
+          msg := sprintf("container %v must set a CPU limit", [c.name])
+        }
+        violation[{"msg": msg}] {
+          c := input.review.object.spec.containers[_]
+          not c.resources.limits.memory
+          msg := sprintf("container %v must set a memory limit", [c.name])
+        }
+---
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata: {name: k8snonroot}
+spec:
+  crd:
+    spec: {names: {kind: K8sNonRoot}}
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8snonroot
+        violation[{"msg": "runAsUser 0 is forbidden"}] {
+          input.review.object.spec.securityContext.runAsUser == 0
+        }
+        violation[{"msg": msg}] {
+          c := input.review.object.spec.containers[_]
+          c.securityContext.runAsUser == 0
+          msg := sprintf("container %v runs as root", [c.name])
+        }
+---
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata: {name: k8snohostnetwork}
+spec:
+  crd:
+    spec: {names: {kind: K8sNoHostNetwork}}
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8snohostnetwork
+        violation[{"msg": "hostNetwork is forbidden"}] {
+          input.review.object.spec.hostNetwork == true
+        }
+---
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata: {name: k8srequiredowner}
+spec:
+  crd:
+    spec: {names: {kind: K8sRequiredOwner}}
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredowner
+        violation[{"msg": "workload must have an owner label"}] {
+          not input.review.object.metadata.labels.owner
+        }
