@@ -5,6 +5,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     STORAGE_LOCAL_DIR=/data/uploads \
     USERSTORE_SQLITE_PATH=/data/transactions.db
 
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --system --gid 10001 budgetbot \
     && useradd --system --uid 10001 --gid budgetbot --home /app budgetbot
 WORKDIR /app
