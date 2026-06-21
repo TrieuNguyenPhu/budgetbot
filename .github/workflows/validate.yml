@@ -1,0 +1,22 @@
+name: validate
+on:
+  pull_request:
+    paths: ["src/**", "tests/**", "k8s/**", "rbac/**", "gatekeeper/**", "eso/**", "policies/**", "tenants/**", "apps/**", "terraform/**"]
+jobs:
+  test-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+      - name: Validate Kubernetes manifests
+        run: |
+          curl -sSLo kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf kubeconform.tar.gz
+          ./kubeconform -strict -summary -ignore-missing-schemas k8s rbac gatekeeper eso policies tenants apps argocd
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=terraform fmt -check -recursive
+      - run: terraform -chdir=terraform init -backend=false
+      - run: terraform -chdir=terraform validate
