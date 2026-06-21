@@ -1,0 +1,38 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBannedLatest
+metadata: {name: no-latest}
+spec:
+  enforcementAction: deny
+  match: {kinds: [{apiGroups: [""], kinds: [Pod]}], excludedNamespaces: [kube-system, gatekeeper-system]}
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLimits
+metadata: {name: require-limits}
+spec:
+  enforcementAction: deny
+  match: {kinds: [{apiGroups: [""], kinds: [Pod]}], excludedNamespaces: [kube-system, gatekeeper-system]}
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sNonRoot
+metadata: {name: deny-root}
+spec:
+  enforcementAction: deny
+  match: {kinds: [{apiGroups: [""], kinds: [Pod]}], excludedNamespaces: [kube-system, gatekeeper-system]}
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sNoHostNetwork
+metadata: {name: no-host-network}
+spec:
+  enforcementAction: deny
+  match: {kinds: [{apiGroups: [""], kinds: [Pod]}], excludedNamespaces: [kube-system, gatekeeper-system]}
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredOwner
+metadata: {name: require-owner}
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - {apiGroups: [apps], kinds: [Deployment, StatefulSet]}
+      - {apiGroups: [argoproj.io], kinds: [Rollout]}
+    excludedNamespaces: [kube-system, gatekeeper-system, argocd, monitoring, argo-rollouts, external-secrets]
